@@ -1,0 +1,99 @@
+// Failure injection
+
+    if (Random.Shared.NextDouble() < 0.3)
+    {
+        throw new InvalidOperationException("Something went wrong.");
+    }
+
+    if (Random.Shared.NextDouble() < 0.2)
+    {
+        await Task.Delay(5000, cancellationToken);
+    }
+
+
+// appsettings.json
+
+{
+    "weather-resilience": {
+        "Hedging":{
+            "Delay": "00:00:02"
+        }
+    }
+}
+
+// Build config
+
+var config = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .Build();
+
+// Custom Resilience Pipeline
+
+        builder.AddTimeout(TimeSpan.FromSeconds(10));
+
+        builder.AddConcurrencyLimiter(100);
+
+        builder.AddRetry(new HttpRetryStrategyOptions
+        {
+           MaxRetryAttempts = 5,
+           Delay = TimeSpan.Zero,
+        });
+
+        builder.AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions
+        {
+            SamplingDuration = TimeSpan.FromSeconds(5),
+            MinimumThroughput = 5,
+            FailureRatio = 0.9,
+            BreakDuration = TimeSpan.FromSeconds(5)
+        });
+
+        builder.AddTimeout(TimeSpan.FromSeconds(1));
+
+
+// Standard Resilience Pipeline
+
+        options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(10);
+
+        options.Retry.MaxRetryAttempts = 5;
+        options.Retry.Delay = TimeSpan.Zero;
+
+        options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(5);
+        options.CircuitBreaker.MinimumThroughput = 5;
+        options.CircuitBreaker.FailureRatio = 0.9;
+        options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(5);
+
+        options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(1);
+
+// Standard Hedging Pipeline
+
+        options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(30);
+
+        options.Hedging.MaxHedgedAttempts = 5;
+        options.Hedging.Delay = TimeSpan.FromMilliseconds(50);
+
+        options.Endpoint.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(5);
+        options.Endpoint.CircuitBreaker.MinimumThroughput = 5;
+        options.Endpoint.CircuitBreaker.FailureRatio = 0.9;
+        options.Endpoint.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(5);
+
+        options.Endpoint.Timeout.Timeout = TimeSpan.FromSeconds(1);
+
+
+// Dynamic Reloads
+
+{
+    "Logging": {
+      "LogLevel": {
+        "Default": "None"
+      }
+    },
+    "weather-pipeline": {
+      "Hedging": {
+        "Delay": "00:00:02"
+      }
+    }
+  }
+
+builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
+Console.WriteLine("Pipeline reloaded!");
