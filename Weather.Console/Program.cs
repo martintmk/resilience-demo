@@ -3,12 +3,12 @@
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 IServiceCollection services = builder.Services;
 
+// Register the HTTP client
 services
     .AddHttpClient("weather", client => client.BaseAddress = new Uri("https://localhost:7100"));
 
-// Use the client
-var host = builder.Build();
-var httpClient = host.Services
+// Create the HTTP client
+var httpClient = builder.Build().Services
     .GetRequiredService<IHttpClientFactory>()
     .CreateClient("weather");
 
@@ -21,11 +21,12 @@ while (true)
         try
         {
             using var response = await httpClient.GetAsync("weatherforecast");
-            Console.WriteLine($"{(int)response.StatusCode}: {watch.Elapsed.TotalMilliseconds}ms");
+
+            Console.WriteLine($"{(int)response.StatusCode}: {watch.Elapsed.TotalMilliseconds,10:0.00}ms");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"{ex.GetType().Name}: {watch.Elapsed.TotalMilliseconds}ms");
+            Console.WriteLine($"Err: {watch.Elapsed.TotalMilliseconds,10:0.00}ms ({ex.GetType().Name})");
         }
     });
 
