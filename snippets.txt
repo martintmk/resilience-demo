@@ -97,3 +97,14 @@ var config = new ConfigurationBuilder()
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
 Console.WriteLine("Pipeline reloaded!");
+
+// Fallback 
+
+httpClientBuilder.AddResilienceHandler("fallback", builder =>
+{
+    builder.AddFallback(new()
+    {
+        ShouldHandle = new PredicateBuilder<HttpResponseMessage>().Handle<BrokenCircuitException>(),
+        FallbackAction = _ => Outcome.FromResultAsValueTask(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable))
+    });
+});
