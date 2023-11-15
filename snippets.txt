@@ -1,14 +1,16 @@
 // Failure injection
 
+    if (Random.Shared.NextDouble() < 0.2)
+    {
+        await Task.Delay(5000, cancellationToken);
+    }
+
     if (Random.Shared.NextDouble() < 0.3)
     {
         throw new InvalidOperationException("Something went wrong.");
     }
 
-    if (Random.Shared.NextDouble() < 0.2)
-    {
-        await Task.Delay(5000, cancellationToken);
-    }
+
 
 
 // appsettings.json
@@ -66,7 +68,7 @@ var config = new ConfigurationBuilder()
 
 // Standard Hedging Pipeline
 
-        options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(30);
+        options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(10);
 
         options.Hedging.MaxHedgedAttempts = 5;
         options.Hedging.Delay = TimeSpan.FromMilliseconds(50);
