@@ -1,7 +1,14 @@
-﻿
-using Pipelines;
-using Polly;
+﻿//
+// Exercise 1: Apply resilience to data processing
+//
 
-var pipeline = ResiliencePipeline.Empty;
+using Pipelines.Utils;
 
-await Execution_ResilienceContext.Example(pipeline, CancellationToken.None);
+var cancellationToken = CancellationToken.None;
+var folders = new string[] { "file-1", "file-2", "file-3" };
+
+foreach (var folder in folders)
+{
+    await ProcessingLibrary.ProcessFileAsync(folder, cancellationToken);
+}
+
