@@ -72,24 +72,3 @@ async Task Batch(Func<Task> action, int count = 10)
     Console.WriteLine();
 }
 
-
-public class MyResilienceHandler : DelegatingHandler
-{
-    public MyResilienceHandler(ResiliencePipeline<HttpResponseMessage> pipeline)
-    {
-        Pipeline = pipeline;
-    }
-
-    public ResiliencePipeline<HttpResponseMessage> Pipeline { get; }
-
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        return await Pipeline.ExecuteAsync(
-            static async (pair, cancellationToken) =>
-            {
-                return await base.SendAsync(pair.request, cancellationToken);
-            }, 
-            (request, this),
-            cancellationToken);
-    }
-}

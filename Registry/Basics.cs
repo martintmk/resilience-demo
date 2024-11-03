@@ -45,7 +45,6 @@ internal static class Basics
             Console.WriteLine("Pipeline not found");
         }
 
-
-        provider.TryGetPipeline("not-existing", out var pipeline);
+        provider.TryGetPipeline("not-existing", out var _);
     }
 }

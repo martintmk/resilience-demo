@@ -1,0 +1,8 @@
+1. Use resilience pipeline to execute file processing
+2. Use pipeline with timeout and retries
+3. Use registry to register the pipeline
+4. Add telemetry to the pipeline
+5. Use hedging to speed up the processing
+6. Hedged attempts should use secondary file processor
+7. Switch to dependency injection
+8. Add the "file.processor.type" dimension to all metrics
