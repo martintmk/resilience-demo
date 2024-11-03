@@ -28,7 +28,7 @@ internal class Exercise3
         })
         .Build();
 
-    public async Task Run(IEnumerable<string> files, CancellationToken cancellationToken)
+    async Task Run(IEnumerable<string> files, CancellationToken cancellationToken)
     {
         foreach (var file in files)
         {
@@ -47,7 +47,7 @@ internal class Exercise3
         }
     }
 
-    private async Task<Outcome<ProcessingStatus>> ProcessFile(string file, CancellationToken cancellationToken)
+    async Task<Outcome<ProcessingStatus>> ProcessFile(string file, CancellationToken cancellationToken)
     {
         var context = ResilienceContextPool.Shared.Get(cancellationToken);
 
@@ -67,12 +67,12 @@ internal class Exercise3
             file);
     }
 
-    private void HandleResult(string file, ProcessingStatus status, TimeSpan elapsed)
+    void HandleResult(string file, ProcessingStatus status, TimeSpan elapsed)
     {
         Console.WriteLine($"File: '{file}', Status: '{status}', Elapsed: {elapsed.TotalMilliseconds}ms");
     }
 
-    private void HandleException(string file, Exception e, TimeSpan elapsed)
+    void HandleException(string file, Exception e, TimeSpan elapsed)
     {
         Console.WriteLine($"File: '{file}', Error: '{e.GetType().Name}', Elapsed: {elapsed.TotalMilliseconds}ms");
     }

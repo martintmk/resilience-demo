@@ -7,7 +7,7 @@ namespace Exercises;
 //
 // Exercise 2: Use pipeline with timeout and retries
 //
-internal class Exercise2
+class Exercise2
 {
     ResiliencePipeline<ProcessingStatus> resiliencePipeline = ResiliencePipeline<ProcessingStatus>.Empty;
 
@@ -30,7 +30,7 @@ internal class Exercise2
         }
     }
 
-    private async Task<Outcome<ProcessingStatus>> ProcessFile(string file, CancellationToken cancellationToken)
+    async Task<Outcome<ProcessingStatus>> ProcessFile(string file, CancellationToken cancellationToken)
     {
         var context = ResilienceContextPool.Shared.Get(cancellationToken);
 
@@ -50,12 +50,12 @@ internal class Exercise2
             file);
     }
 
-    private void HandleResult(string file, ProcessingStatus status, TimeSpan elapsed)
+    void HandleResult(string file, ProcessingStatus status, TimeSpan elapsed)
     {
         Console.WriteLine($"File: '{file}', Status: '{status}', Elapsed: {elapsed.TotalMilliseconds}ms");
     }
 
-    private void HandleException(string file, Exception e, TimeSpan elapsed)
+    void HandleException(string file, Exception e, TimeSpan elapsed)
     {
         Console.WriteLine($"File: '{file}', Error: '{e.GetType().Name}', Elapsed: {elapsed.TotalMilliseconds}ms");
     }

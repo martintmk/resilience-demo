@@ -7,7 +7,7 @@ namespace Exercises;
 //
 // Exercise 1: Use resilience pipeline to execute file processing
 //
-internal class Exercise1
+class Exercise1
 {
     ResiliencePipeline<ProcessingStatus> resiliencePipeline = ResiliencePipeline<ProcessingStatus>.Empty;
 
@@ -29,12 +29,12 @@ internal class Exercise1
         }
     }
 
-    private void HandleResult(string file, ProcessingStatus status, TimeSpan elapsed)
+    void HandleResult(string file, ProcessingStatus status, TimeSpan elapsed)
     {
         Console.WriteLine($"File: '{file}', Status: '{status}', Elapsed: {elapsed.TotalMilliseconds}ms");
     }
 
-    private void HandleException(string file, Exception e, TimeSpan elapsed)
+    void HandleException(string file, Exception e, TimeSpan elapsed)
     {
         Console.WriteLine($"File: '{file}', Error: '{e.GetType().Name}', Elapsed: {elapsed.TotalMilliseconds}ms");
     }

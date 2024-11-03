@@ -16,7 +16,7 @@ public interface IFileProcessor
 
 public static class ProcessingLibrary
 {
-    public static readonly IFileProcessor MainProcessor = new ChaosProcessor(new FileProcessor(), 0.01, 0.02, 0.05);
+    public static readonly IFileProcessor MainProcessor = new ChaosProcessor(new FileProcessor(), 0.02, 0.02, 0.05);
 
     public static readonly IFileProcessor SecondaryProcessor = new FileProcessor();
 
@@ -56,7 +56,7 @@ public class ChaosProcessor : IFileProcessor
     public ChaosProcessor(IFileProcessor inner, double latencyRate, double resultRate, double exceptionRate)
     {
         pipeline = new ResiliencePipelineBuilder<ProcessingStatus>()
-            .AddChaosLatency(latencyRate, TimeSpan.FromSeconds(5))
+            .AddChaosLatency(latencyRate, TimeSpan.FromSeconds(2))
             .AddChaosOutcome(resultRate, () => ProcessingStatus.Error)
             .AddChaosFault(exceptionRate, () => new InvalidOperationException())
             .Build();
