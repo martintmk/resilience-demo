@@ -34,20 +34,27 @@ class Exercise2
     {
         var context = ResilienceContextPool.Shared.Get(cancellationToken);
 
-        return await resiliencePipeline.ExecuteOutcomeAsync(
-            static async (context, file) =>
-            {
-                try
+        try
+        {
+            return await resiliencePipeline.ExecuteOutcomeAsync(
+                static async (context, file) =>
                 {
-                    return Outcome.FromResult(await ProcessingLibrary.ProcessFileAsync(file, context.CancellationToken));
-                }
-                catch (Exception e)
-                {
-                    return Outcome.FromException<ProcessingStatus>(e);
-                }
-            },
-            context,
-            file);
+                    try
+                    {
+                        return Outcome.FromResult(await ProcessingLibrary.ProcessFileAsync(file, context.CancellationToken));
+                    }
+                    catch (Exception e)
+                    {
+                        return Outcome.FromException<ProcessingStatus>(e);
+                    }
+                },
+                context,
+                file);
+        }
+        finally
+        {
+            ResilienceContextPool.Shared.Return(context);
+        }
     }
 
     void HandleResult(string file, ProcessingStatus status, TimeSpan elapsed)

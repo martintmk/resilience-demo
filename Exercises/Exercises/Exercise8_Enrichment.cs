@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
 using Polly;
 using Polly.Hedging;
 using Polly.Timeout;
@@ -74,26 +75,31 @@ internal class Exercise8
     private async Task<Outcome<ProcessingStatus>> ProcessFile(string file, CancellationToken cancellationToken)
     {
         var context = ResilienceContextPool.Shared.Get(cancellationToken);
-        
         context.Properties.Set(Properties.FileProcessor, ProcessingLibrary.MainProcessor);
 
-
-        return await pipeline.ExecuteOutcomeAsync(
-            static async (context, file) =>
-            {
-                var processor = context.Properties.GetValue(Properties.FileProcessor, ProcessingLibrary.MainProcessor);
-
-                try
+        try
+        {
+            return await pipeline.ExecuteOutcomeAsync(
+                static async (context, file) =>
                 {
-                    return Outcome.FromResult(await processor.ProcessFileAsync(file, context.CancellationToken));
-                }
-                catch (Exception e)
-                {
-                    return Outcome.FromException<ProcessingStatus>(e);
-                }
-            },
-            context,
-            file);
+                    var processor = context.Properties.GetValue(Properties.FileProcessor, ProcessingLibrary.MainProcessor);
+
+                    try
+                    {
+                        return Outcome.FromResult(await processor.ProcessFileAsync(file, context.CancellationToken));
+                    }
+                    catch (Exception e)
+                    {
+                        return Outcome.FromException<ProcessingStatus>(e);
+                    }
+                },
+                context,
+                file);
+        }
+        finally
+        {
+            ResilienceContextPool.Shared.Return(context);
+        }
     }
 
     private void HandleResult(string file, ProcessingStatus status, TimeSpan elapsed)
