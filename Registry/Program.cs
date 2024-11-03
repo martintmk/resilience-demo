@@ -1,0 +1,4 @@
+﻿
+using Registry;
+
+Reloadable.Example();

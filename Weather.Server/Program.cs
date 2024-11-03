@@ -23,7 +23,7 @@ var summaries = new[]
 
 app.MapGet("/weatherforecast", async (HttpContext context, CancellationToken cancellationToken) =>
 {
-    // await InjectChaos(cancellationToken);
+    await InjectChaos(cancellationToken);
 
     var forecast = Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
@@ -52,7 +52,6 @@ static async Task InjectChaos(CancellationToken cancellationToken)
         throw new InvalidOperationException("Internal server error.");
     }
 }
-
 
 internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
