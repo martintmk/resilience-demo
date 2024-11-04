@@ -1,10 +1,14 @@
 ﻿using System.Diagnostics;
 
+var builder = WebApplication.CreateBuilder();
+
+// Register the HTTP client
+builder.Services.AddHttpClient("weather", c => c.BaseAddress = new Uri("https://localhost:7100"));
+
 // Create the HTTP client
-var httpClient = new HttpClient()
-{
-    BaseAddress = new Uri("https://localhost:7100")
-};
+var httpClient = builder.Build().Services
+    .GetRequiredService<IHttpClientFactory>()
+    .CreateClient("weather");
 
 while (true)
 {
