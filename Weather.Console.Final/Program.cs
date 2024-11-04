@@ -1,37 +1,59 @@
 ﻿using Microsoft.Extensions.Http.Resilience;
 using Polly;
+using Polly.Retry;
+using Polly.Timeout;
 using System.Diagnostics;
+using Weather.Console.Final.Utils;
 
-var app = WebApplication.CreateBuilder();
-var services = app.Services;
+var builder = WebApplication.CreateBuilder();
 
-services
-    .AddHttpClient("my-client", client => client.BaseAddress = new Uri("https://localhost:7100"))
-    .AddHttpMessageHandler(() =>
+// Register the HTTP client
+builder.Services.AddHttpClient("weather", c => c.BaseAddress = new Uri("https://localhost:7100"))
+    .AddStandardResilienceHandler()
+    .Configure(options => 
     {
-        var options = new HttpStandardResilienceOptions();
-
-        options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(5);
-        options.CircuitBreaker.FailureRatio = 0.9;
-        options.CircuitBreaker.MinimumThroughput = 5;
-        options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(5);
+        options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(10);
 
         options.Retry.MaxRetryAttempts = 5;
         options.Retry.Delay = TimeSpan.Zero;
-        options.AttemptTimeout.Timeout = TimeSpan.FromMilliseconds(100);
 
-        var resiliencePipeline = new ResiliencePipelineBuilder<HttpResponseMessage>()
-            .AddTimeout(options.TotalRequestTimeout)
-            .AddRateLimiter(options.RateLimiter)
-            .AddRetry(options.Retry)
-            .AddCircuitBreaker(options.CircuitBreaker)
-            .AddTimeout(options.AttemptTimeout)
-            .Build();
+        options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(5);
+        options.CircuitBreaker.MinimumThroughput = 5;
+        options.CircuitBreaker.FailureRatio = 0.9;
+        options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(5);
 
-        return new ResilienceHandler(resiliencePipeline);
+        options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(1);
     });
 
-var httpClient = app.Build().Services.GetRequiredService<IHttpClientFactory>().CreateClient("my-client");
+builder.Services.AddHttpClient("weather-hedged", c => c.BaseAddress = new Uri("https://localhost:7100"))
+    .AddStandardHedgingHandler(routes =>
+    {
+        routes.ConfigureOrderedGroups(options => Routes.ConfigureEndpoints(options));
+    })
+    .Configure(options =>
+    {
+        options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(10);
+
+        options.Hedging.MaxHedgedAttempts = 5;
+        options.Hedging.Delay = TimeSpan.Zero;
+        options.Hedging.OnHedging = args =>
+        {
+            HttpRequestMessage? request = args.ActionContext.GetRequestMessage();
+            return default;
+        };
+
+        options.Endpoint.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(5);
+        options.Endpoint.CircuitBreaker.MinimumThroughput = 5;
+        options.Endpoint.CircuitBreaker.FailureRatio = 0.9;
+        options.Endpoint.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(5);
+
+        options.Endpoint.Timeout.Timeout = TimeSpan.FromSeconds(1);
+    });
+
+// Create the HTTP client
+var httpClient = builder.Build().Services
+    .GetRequiredService<IHttpClientFactory>()
+    .CreateClient("weather");
 
 while (true)
 {
@@ -71,4 +93,3 @@ async Task Batch(Func<Task> action, int count = 10)
     Console.WriteLine($"Sending {count} requests...{watch.Elapsed.TotalMilliseconds}ms");
     Console.WriteLine();
 }
-
