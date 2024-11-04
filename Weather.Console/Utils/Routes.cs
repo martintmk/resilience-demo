@@ -9,23 +9,23 @@ public class Routes
         options.Groups.Add(new UriEndpointGroup
         {
             Endpoints = new List<WeightedUriEndpoint>
+            {
+                new WeightedUriEndpoint
                 {
-                    new WeightedUriEndpoint
-                    {
-                        Uri = new Uri("https://localhost:7100"),
-                    }
+                    Uri = new Uri("https://localhost:7100"),
                 }
+            }
         });
 
         options.Groups.Add(new UriEndpointGroup
         {
             Endpoints = new List<WeightedUriEndpoint>
+            {
+                new WeightedUriEndpoint
                 {
-                    new WeightedUriEndpoint
-                    {
-                        Uri = new Uri("https://localhost:8100"),
-                    }
+                    Uri = new Uri("https://localhost:8100"),
                 }
+            }
         });
     }
 }

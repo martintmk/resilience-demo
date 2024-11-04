@@ -6,3 +6,4 @@
 6. Hedged attempts should use secondary file processor
 7. Switch to dependency injection
 8. Add the "file.processor.type" dimension to all metrics
+9. Test the pipeline

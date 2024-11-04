@@ -5,3 +5,18 @@ var host = Host.CreateDefaultBuilder()
 
     })
     .Build();
+
+
++--------+       +--------------------+       +---------+
+|        |       |                    |       |         |
+| Retry  +------>+   Circuit Breaker  +------>+ Timeout |
+|        |       |                    |       |         |
++--------+       +--------------------+       +---------+
+
+
+options.Hedging.OnHedging = args =>
+{
+    HttpRequestMessage? request = args.ActionContext.GetRequestMessage();
+    request!.RequestUri = new Uri("https://localhost:8100" + request.RequestUri!.PathAndQuery);
+    return default;
+};

@@ -28,7 +28,7 @@ internal class Exercise3
         })
         .Build();
 
-    async Task Run(IEnumerable<string> files, CancellationToken cancellationToken)
+    public async Task Run(IEnumerable<string> files, CancellationToken cancellationToken)
     {
         foreach (var file in files)
         {

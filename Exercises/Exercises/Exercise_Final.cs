@@ -11,9 +11,9 @@ using System.Diagnostics;
 namespace Exercises;
 
 //
-// Exercise 8: Final!
+// Exercise 8: Test the pipeline composition
 //
-internal class Exercise9
+public class Exercise_Final
 {
     private readonly ResiliencePipeline<ProcessingStatus> pipeline;
 
@@ -53,7 +53,7 @@ internal class Exercise9
         });
     }
 
-    public Exercise9([FromKeyedServices("file-pipeline")]ResiliencePipeline<ProcessingStatus> pipeline)
+    public Exercise_Final([FromKeyedServices("file-pipeline")]ResiliencePipeline<ProcessingStatus> pipeline)
     {
         this.pipeline = pipeline;
     }
