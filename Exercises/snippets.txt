@@ -1,3 +1,13 @@
+private async Task<ProcessingStatus> ProcessFileAsync(string file, CancellationToken cancellationToken)
+{
+    return await resiliencePipeline.ExecuteAsync(async token =>
+    {
+        return await ProcessingLibrary.ProcessFileAsync(file, token);
+    },
+    cancellationToken);
+}
+
+
 var loggerFatory = LoggerFactory.Create(builder => builder.AddConsole().SetMinimumLevel(LogLevel.Error));
 
 IServiceCollection services = new ServiceCollection();
