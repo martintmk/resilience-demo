@@ -21,11 +21,12 @@ internal class Exercise5
         {
             builder.AddRetry(new RetryStrategyOptions<ProcessingStatus>
             {
-                Delay = TimeSpan.Zero,
+                Delay = TimeSpan.FromMilliseconds(10),
                 MaxRetryAttempts = 5,
                 ShouldHandle = args => args.Outcome switch
                 {
                     { Exception: InvalidOperationException } => PredicateResult.True(),
+                    { Exception: TimeoutRejectedException } => PredicateResult.True(),
                     { Result: ProcessingStatus.Error } => PredicateResult.True(),
                     _ => PredicateResult.False(),
                 }

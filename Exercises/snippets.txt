@@ -10,19 +10,42 @@ private async Task<ProcessingStatus> ProcessFileAsync(string file, CancellationT
 
 var loggerFatory = LoggerFactory.Create(builder => builder.AddConsole().SetMinimumLevel(LogLevel.Error));
 
+class Properties
+{
+    public static readonly ResiliencePropertyKey<IFileProcessor> FileProcessor = new("FileProcessor");
+}
+
 IServiceCollection services = new ServiceCollection();
-Exercise8.ConfigureServices(services);
+Exercise7.ConfigureServices(services);
 var exercise = services.BuildServiceProvider().GetRequiredService<Exercise7>();
+await exercise.Run(files, cancellationToken);
     
+class ProcessorTypeEnricher : MeteringEnricher
+{
+    public override void Enrich<TResult, TArgs>(in EnrichmentContext<TResult, TArgs> context)
+    {
+        if (context.TelemetryEvent.Context.Properties.TryGetValue(Properties.FileProcessor, out var processor))
+        {
+            context.Tags.Add(new("file.processor.type", ProcessingLibrary.GetProcessorType(processor)));
+        }
+    }
+}
+
 [Fact]
 public void TestComposition()
 {
+    // Arrange
     var services = new ServiceCollection();
     Exercise_Final.ConfigureServices(services);
+    var pipelineProvider = services
+        .BuildServiceProvider()
+        .GetRequiredService<ResiliencePipelineProvider<string>>();
 
-    var provider = services.BuildServiceProvider().GetRequiredService<ResiliencePipelineProvider<string>>();
+    // Act
+    var pipeline = pipelineProvider.GetPipeline<ProcessingStatus>("file-pipeline");
 
-    var descriptor = provider.GetPipeline<ProcessingStatus>("file-pipeline").GetPipelineDescriptor();
+    // Assert
+    var descriptor = pipeline.GetPipelineDescriptor();
 
     Assert.Equal(2, descriptor.Strategies.Count());
 

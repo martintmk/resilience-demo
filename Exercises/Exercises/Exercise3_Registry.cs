@@ -14,10 +14,11 @@ internal class Exercise3
     ResiliencePipeline<ProcessingStatus> resiliencePipeline = new ResiliencePipelineBuilder<ProcessingStatus>()
         .AddRetry(new RetryStrategyOptions<ProcessingStatus>
         {
-            Delay = TimeSpan.Zero,
+            Delay = TimeSpan.FromMilliseconds(10),
             ShouldHandle = args => args.Outcome switch
             {
                 { Exception: InvalidOperationException} => PredicateResult.True(),
+                { Exception: TimeoutRejectedException } => PredicateResult.True(),
                 { Result: ProcessingStatus.Error } => PredicateResult.True(),
                 _ => PredicateResult.False(),
             }

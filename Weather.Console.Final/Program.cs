@@ -35,7 +35,7 @@ builder.Services.AddHttpClient("weather-hedged", c => c.BaseAddress = new Uri("h
         options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(10);
 
         options.Hedging.MaxHedgedAttempts = 5;
-        options.Hedging.Delay = TimeSpan.Zero;
+        options.Hedging.Delay = TimeSpan.FromMilliseconds(10);
         options.Hedging.OnHedging = args =>
         {
             HttpRequestMessage? request = args.ActionContext.GetRequestMessage();

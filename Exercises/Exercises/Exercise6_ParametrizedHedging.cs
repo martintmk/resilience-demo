@@ -21,11 +21,12 @@ internal class Exercise6
         {
             builder.AddHedging(new HedgingStrategyOptions<ProcessingStatus>
             {
-                Delay = TimeSpan.FromMilliseconds(100),
+                Delay = TimeSpan.FromMilliseconds(50),
                 MaxHedgedAttempts = 5,
                 ShouldHandle = args => args.Outcome switch
                 {
                     { Exception: InvalidOperationException } => PredicateResult.True(),
+                    { Exception: TimeoutRejectedException } => PredicateResult.True(),
                     { Result: ProcessingStatus.Error } => PredicateResult.True(),
                     _ => PredicateResult.False(),
                 }

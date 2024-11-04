@@ -1,11 +1,3 @@
-// Host configuration
-var host = Host.CreateDefaultBuilder()
-    .ConfigureServices(services =>
-    {
-
-    })
-    .Build();
-
 
 +--------+       +--------------------+       +---------+
 |        |       |                    |       |         |
