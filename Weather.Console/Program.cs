@@ -1,11 +1,9 @@
 ﻿using System.Diagnostics;
 
-HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
-IServiceCollection services = builder.Services;
+var builder = WebApplication.CreateBuilder();
 
 // Register the HTTP client
-services
-    .AddHttpClient("weather", client => client.BaseAddress = new Uri("https://localhost:7100"));
+builder.Services.AddHttpClient("weather", c => c.BaseAddress = new Uri("https://localhost:7100"));
 
 // Create the HTTP client
 var httpClient = builder.Build().Services

@@ -21,8 +21,10 @@ var summaries = new[]
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
-app.MapGet("/weatherforecast", (CancellationToken cancellationToken) =>
+app.MapGet("/weatherforecast", async (HttpContext context, CancellationToken cancellationToken) =>
 {
+    await InjectChaos(cancellationToken);
+
     var forecast = Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
         (
@@ -37,6 +39,19 @@ app.MapGet("/weatherforecast", (CancellationToken cancellationToken) =>
 .WithOpenApi();
 
 app.Run();
+
+static async Task InjectChaos(CancellationToken cancellationToken)
+{
+    if (Random.Shared.NextDouble() < 0.2)
+    {
+        await Task.Delay(5000, cancellationToken);
+    }
+
+    if (Random.Shared.NextDouble() < 0.3)
+    {
+        throw new InvalidOperationException("Internal server error.");
+    }
+}
 
 internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {

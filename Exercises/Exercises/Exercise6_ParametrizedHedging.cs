@@ -1,0 +1,102 @@
+﻿using Exercises.Utils;
+using Microsoft.Extensions.Logging;
+using Polly;
+using Polly.Hedging;
+using Polly.Registry;
+using Polly.Timeout;
+using System.Diagnostics;
+
+namespace Exercises;
+
+//
+// Exercise 6: Hedged attempts should use secondary file processor
+//
+internal class Exercise6
+{
+    private readonly ResiliencePipelineRegistry<string> registry;
+
+    public Exercise6(ResiliencePipelineRegistry<string> registry, ILoggerFactory loggerFactory)
+    {
+        registry.TryAddBuilder<ProcessingStatus>("file-pipeline", (builder, context) =>
+        {
+            builder.AddHedging(new HedgingStrategyOptions<ProcessingStatus>
+            {
+                Delay = TimeSpan.FromMilliseconds(50),
+                MaxHedgedAttempts = 5,
+                ShouldHandle = args => args.Outcome switch
+                {
+                    { Exception: InvalidOperationException } => PredicateResult.True(),
+                    { Exception: TimeoutRejectedException } => PredicateResult.True(),
+                    { Result: ProcessingStatus.Error } => PredicateResult.True(),
+                    _ => PredicateResult.False(),
+                }
+            });
+
+            builder.AddTimeout(new TimeoutStrategyOptions
+            {
+                Timeout = TimeSpan.FromMilliseconds(300),
+            });
+
+
+            builder.ConfigureTelemetry(loggerFactory);
+        });
+
+        this.registry = registry;
+    }
+
+    public async Task Run(IEnumerable<string> files, CancellationToken cancellationToken)
+    {
+        foreach (var file in files)
+        {
+            var watch = Stopwatch.StartNew();
+
+            Outcome<ProcessingStatus> result = await ProcessFile(file, cancellationToken);
+
+            if (result.Exception is { } error)
+            {
+                HandleException(file, error, watch.Elapsed);
+            }
+            else
+            {
+                HandleResult(file, result.Result, watch.Elapsed);
+            }
+        }
+    }
+
+    private async Task<Outcome<ProcessingStatus>> ProcessFile(string file, CancellationToken cancellationToken)
+    {
+        var context = ResilienceContextPool.Shared.Get(cancellationToken);
+
+        try
+        {
+            return await registry.GetPipeline<ProcessingStatus>("file-pipeline").ExecuteOutcomeAsync(
+                static async (context, file) =>
+                {
+                    try
+                    {
+                        return Outcome.FromResult(await ProcessingLibrary.ProcessFileAsync(file, context.CancellationToken));
+                    }
+                    catch (Exception e)
+                    {
+                        return Outcome.FromException<ProcessingStatus>(e);
+                    }
+                },
+                context,
+                file);
+        }
+        finally
+        {
+            ResilienceContextPool.Shared.Return(context);
+        }
+    }
+
+    private void HandleResult(string file, ProcessingStatus status, TimeSpan elapsed)
+    {
+        Console.WriteLine($"File: '{file}', Status: '{status}', Elapsed: {elapsed.TotalMilliseconds}ms");
+    }
+
+    private void HandleException(string file, Exception e, TimeSpan elapsed)
+    {
+        Console.WriteLine($"File: '{file}', Error: '{e.GetType().Name}', Elapsed: {elapsed.TotalMilliseconds}ms");
+    }
+}
